@@ -15,6 +15,69 @@
   ];
   let monitors = JSON.parse(localStorage.getItem("statuswatch-monitors") || "[]");
   let checks = 0, latencies = [];
+
+let isAdmin = false;
+
+async function checkAdminSession() {
+  try {
+    const result = await apiRequest("/api/auth/me");
+    isAdmin = result.authenticated === true;
+  } catch {
+    isAdmin = false;
+  }
+
+  updateAdminUI();
+}
+
+function updateAdminUI() {
+  const loginButton = $("admin-login-button");
+  const addButton = $("add-monitor-button");
+
+  if (loginButton) {
+    loginButton.textContent = isAdmin ? "Admin Logout" : "Admin Login";
+  }
+
+  if (addButton) {
+    addButton.hidden = !isAdmin;
+  }
+
+  document.querySelectorAll("[data-remove]").forEach(button => {
+    button.hidden = !isAdmin;
+  });
+}
+
+
+async function adminLogin(password) {
+  await apiRequest("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ password })
+  });
+
+  const session = await apiRequest("/api/auth/me");
+
+  if (session.authenticated !== true) {
+    throw new Error(
+      "Login succeeded, but the browser session was not established. Check cookie settings."
+    );
+  }
+
+  isAdmin = true;
+  updateAdminUI();
+  await loadRemoteMonitors();
+  toast("Administrator login successful.");
+}
+
+
+async function adminLogout() {
+  await apiRequest("/api/auth/logout", {
+    method: "POST"
+  });
+
+  isAdmin = false;
+  updateAdminUI();
+  toast("Administrator logged out.");
+}
+
   const save = () => localStorage.setItem("statuswatch-monitors", JSON.stringify(monitors));
   const safeUrl = (value) => {
     let raw = value.trim();
@@ -58,15 +121,35 @@
       body.querySelectorAll("[data-check]").forEach(b=>b.addEventListener("click",()=>checkMonitor(Number(b.dataset.check))));
       body.querySelectorAll("[data-remove]").forEach(b=>b.addEventListener("click",async()=>{try{await removeMonitor(Number(b.dataset.remove));}catch(e){toast(e.message);}}));
     }
+updateAdminUI();
   }
   function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-  async function apiRequest(path, options={}) {
-    if (!API) throw new Error("Connect the Cloudflare Worker API to run live server-side checks. See README.md.");
-    const response = await fetch(`${API}${path}`, {headers:{"Content-Type":"application/json",...(options.headers||{})},...options});
-    const data = await response.json().catch(()=>({error:"The monitoring API returned an invalid response."}));
-    if (!response.ok) throw new Error(data.error || `Monitoring API error (${response.status})`);
-    return data;
+
+async function apiRequest(path, options = {}) {
+  if (!API) {
+    throw new Error("Cloudflare Worker API is not configured.");
   }
+
+  const response = await fetch(`${API}${path}`, {
+    ...options,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  const data = await response.json().catch(() => ({
+    error: "The monitoring API returned an invalid response."
+  }));
+
+  if (!response.ok) {
+    throw new Error(data.error || `Monitoring API error (${response.status})`);
+  }
+
+  return data;
+}
+
   const apiCheck = (url) => apiRequest("/api/check", {method:"POST",body:JSON.stringify({url})});
   async function loadRemoteMonitors() {
     if (!API) return;
@@ -105,8 +188,15 @@
     for(let i=0;i<monitors.length;i++) await checkMonitor(i);
     $("refresh-button").disabled=false;
   }
-  function openModal(){ $("monitor-dialog").showModal(); }
+  function openModal(){
+  if (!isAdmin) {
+    toast("Administrator login required.");
+    return;
+  }
+  $("monitor-dialog").showModal();
+}
   async function addMonitor(url,name) {
+if (!isAdmin) throw new Error("Administrator login required.");
     const normalized=safeUrl(url);
     if(monitors.some(m=>m.url===normalized)) throw new Error("That website is already on your watchlist.");
     const displayName=name.trim()||hostOf(normalized);
@@ -119,10 +209,54 @@
     save();render();
   }
   async function removeMonitor(index) {
+if (!isAdmin) throw new Error("Administrator login required.");
     const monitor=monitors[index]; if(!monitor)return;
     if(API && monitor.id) await apiRequest(`/api/monitors/${encodeURIComponent(monitor.id)}`,{method:"DELETE"});
     monitors.splice(index,1);save();render();toast("Monitor removed");
   }
+
+  $("admin-login-button")?.addEventListener("click", async () => {
+    if (isAdmin) {
+      try {
+        await adminLogout();
+        render();
+      } catch (error) {
+        toast(error.message);
+      }
+      return;
+    }
+
+    $("admin-login-error").textContent = "";
+    $("admin-password").value = "";
+    $("admin-dialog").showModal();
+  });
+
+  $("admin-login-form")?.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const password = $("admin-password").value;
+    const errorElement = $("admin-login-error");
+    const submitButton = event.submitter;
+
+    errorElement.textContent = "";
+    if (submitButton) submitButton.disabled = true;
+
+    try {
+      await adminLogin(password);
+      $("admin-dialog").close();
+      $("admin-password").value = "";
+      render();
+    } catch (error) {
+      errorElement.textContent = error.message;
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
+  });
+
+  const closeAdminDialog = () => $("admin-dialog").close();
+
+  $("admin-close-button")?.addEventListener("click", closeAdminDialog);
+  $("admin-cancel-button")?.addEventListener("click", closeAdminDialog);
   $("check-form").addEventListener("submit",async e=>{
     e.preventDefault();let url;
     try{url=safeUrl($("url-input").value);}catch(err){toast(err.message);return;}
@@ -144,5 +278,6 @@
   if(localStorage.getItem("statuswatch-dark")==="1")document.body.classList.add("dark");
   $("year").textContent=new Date().getFullYear();
   if(API){$("api-state").textContent="Configured";$("api-foot").textContent="Worker URL is set";$("system-label").textContent="API CONFIGURED";$("watchlist-note").textContent="Your monitors are saved in Cloudflare KV and checked automatically every five minutes.";loadRemoteMonitors();}
-  render();
+render();
+checkAdminSession();
 })();

@@ -23,10 +23,13 @@
         <a href="#monitors" class="nav-link">Monitors</a>
         <a href="#how-it-works" class="nav-link">How it works</a>
       </nav>
-      <div class="top-actions">
-        <span class="system-pill"><i></i><span id="system-label">MONITORING READY</span></span>
-        <button class="icon-button" id="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
-      </div>
+
+<div class="top-actions">
+  <span class="system-pill"><i></i><span id="system-label">MONITORING READY</span></span>
+  <button class="secondary-button" id="admin-login-button" type="button">Admin Login</button>
+  <button class="icon-button" id="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
+</div>
+
     </header>
 
     <main id="overview">
@@ -133,8 +136,39 @@
     </form>
   </dialog>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="./config.js"></script>
-  <script src="./app.js"></script>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="admin-dialog" class="modal">
+  <form id="admin-login-form">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">ADMINISTRATION</div>
+        <h3>Administrator Login</h3>
+      </div>
+      <button class="close-button" id="admin-close-button" type="button" aria-label="Close">×</button>
+    </div>
+
+    <label for="admin-password">Administrator password</label>
+    <input
+      id="admin-password"
+      type="password"
+      placeholder="Enter administrator password"
+      autocomplete="current-password"
+      required
+    >
+
+    <p id="admin-login-error" class="modal-note" role="alert"></p>
+
+    <div class="modal-actions">
+      <button class="secondary-button" id="admin-cancel-button" type="button">Cancel</button>
+      <button class="primary-button" type="submit">Login ↗</button>
+    </div>
+  </form>
+</dialog>
+</div>
+
+<script src="./config.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>

@@ -249,12 +249,13 @@ async function saveCheck(env, monitor, result) {
   await env.MONITORS.put(historyKey, JSON.stringify(history.slice(-MAX_HISTORY)));
 }
 
+
 function sessionCookie(token) {
-  return `${SESSION_COOKIE}=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_SECONDS}`;
+  return `${SESSION_COOKIE}=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${SESSION_TTL_SECONDS}`;
 }
 
 function clearSessionCookie() {
-  return `${SESSION_COOKIE}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0`;
+  return `${SESSION_COOKIE}=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0`;
 }
 
 export default {
@@ -316,10 +317,10 @@ export default {
       }
 
       const authenticated = await verifySession(request, env);
-      const isAdminRoute =
-        (url.pathname === "/api/monitors" && request.method === "POST") ||
-        (url.pathname.startsWith("/api/monitors/") && request.method === "DELETE") ||
-        (url.pathname === "/api/check" && request.method === "POST");
+
+const isAdminRoute =
+  (url.pathname === "/api/monitors" && request.method === "POST") ||
+  (url.pathname.startsWith("/api/monitors/") && request.method === "DELETE");
 
       if (isAdminRoute) {
         if (!requireAllowedOrigin(request, env)) return json({ error: "A trusted website origin is required." }, 403, origin, env);
@@ -327,7 +328,7 @@ export default {
         if (!(await enforceRateLimit(request, env))) return json({ error: "Rate limit exceeded. Try again later." }, 429, origin, env);
       }
 
-      
+
 if (url.pathname === "/api/check" && request.method === "POST") {
     if (!(await enforceRateLimit(request, env))) {
         return json({ error: "Rate limit exceeded. Try again later." }, 429, origin, env);
@@ -342,7 +343,7 @@ if (url.pathname === "/api/check" && request.method === "POST") {
     return json(await checkUrl(body.url), 200, origin, env);
 }
 
-    
+
 
       if (url.pathname === "/api/monitors" && request.method === "POST") {
         const body = await readJson(request);
