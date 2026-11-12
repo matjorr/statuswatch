@@ -1,0 +1,14 @@
+name = "statuswatch-api"
+main = "index.js"
+compatibility_date = "2026-11-12"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[kv_namespaces]]
+binding = "MONITORS"
+id = "REPLACE_WITH_YOUR_CLOUDFLARE_KV_NAMESPACE_ID"
+
+[vars]
+# Replace with your GitHub Pages origin after publishing, e.g. https://YOURNAME.github.io
+ALLOWED_ORIGIN = "*"
