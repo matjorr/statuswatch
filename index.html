@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="StatusWatch checks website availability, response times, and uptime history.">
+  <title>StatusWatch — Website uptime monitoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="StatusWatch home">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.2-6 4.1 12 2.1-6H21"/></svg></span>
+        <span>Status<span class="brand-light">Watch</span></span>
+      </a>
+      <nav class="top-nav" aria-label="Main navigation">
+        <a href="#overview" class="nav-link active">Overview</a>
+        <a href="#monitors" class="nav-link">Monitors</a>
+        <a href="#how-it-works" class="nav-link">How it works</a>
+      </nav>
+      <div class="top-actions">
+        <span class="system-pill"><i></i><span id="system-label">MONITORING READY</span></span>
+        <button class="icon-button" id="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
+      </div>
+    </header>
+
+    <main id="overview">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> THE INTERNET, AT A GLANCE</div>
+          <h1>Is it down, or<br>is it <span>just you?</span></h1>
+          <p class="hero-subtitle">Check any public website, track uptime, and spot interruptions before they slow you down.</p>
+          <form class="check-form" id="check-form">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <label class="sr-only" for="url-input">Website address</label>
+            <input id="url-input" type="text" placeholder="Enter a website (e.g. example.com)" autocomplete="url" spellcheck="false" required>
+            <button class="primary-button" type="submit" id="check-button">Check status <span>↗</span></button>
+          </form>
+          <p class="form-hint">Checks are made from StatusWatch's monitoring server. A single check is not a guarantee of global availability.</p>
+          <div id="check-result" class="check-result" role="status" aria-live="polite" hidden></div>
+        </div>
+        <div class="hero-visual" aria-label="Illustration of a live network pulse">
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+          <div class="pulse-core"><div class="pulse-inner"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M9 51h18l9-22 18 45 13-34 8 11h16"/></svg></div></div>
+          <span class="orbit-dot dot-a"></span><span class="orbit-dot dot-b"></span><span class="orbit-dot dot-c"></span>
+          <div class="visual-caption"><span class="live-dot"></span> CONNECTIVITY CHECK</div>
+        </div>
+      </section>
+
+      <section class="stats-grid" aria-label="Monitoring summary">
+        <article class="stat-card">
+          <div class="stat-top"><span class="stat-label">YOUR MONITORS</span><span class="stat-icon">⌁</span></div>
+          <div class="stat-value" id="monitor-count">0</div>
+          <div class="stat-foot">Websites you're tracking</div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top"><span class="stat-label">CHECKS COMPLETED</span><span class="stat-icon">↗</span></div>
+          <div class="stat-value" id="check-count">0</div>
+          <div class="stat-foot">Checks in this browser session</div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top"><span class="stat-label">AVG. RESPONSE TIME</span><span class="stat-icon">◷</span></div>
+          <div class="stat-value"><span id="avg-latency">—</span><small id="avg-unit"></small></div>
+          <div class="stat-foot">Across successful checks</div>
+        </article>
+        <article class="stat-card status-stat">
+          <div class="stat-top"><span class="stat-label">API CONNECTION</span><span class="stat-icon">◎</span></div>
+          <div class="stat-value compact" id="api-state">Not connected</div>
+          <div class="stat-foot" id="api-foot">Add your Worker URL to connect</div>
+        </article>
+      </section>
+
+      <section class="content-section" id="monitors">
+        <div class="section-heading">
+          <div><div class="eyebrow">YOUR WATCHLIST</div><h2>Website monitors</h2><p>Keep an eye on the services that matter to you.</p></div>
+          <button class="secondary-button" id="add-monitor-button">＋ Add monitor</button>
+        </div>
+        <div class="panel monitor-panel">
+          <div class="panel-toolbar">
+            <div class="panel-title">Monitored websites <span class="count-badge" id="watchlist-count">0</span></div>
+            <button class="text-button" id="refresh-button">↻ Refresh</button>
+          </div>
+          <div class="monitor-table-wrap">
+            <table class="monitor-table">
+              <thead><tr><th>WEBSITE</th><th>STATUS</th><th>RESPONSE TIME</th><th>LAST CHECKED</th><th></th></tr></thead>
+              <tbody id="monitor-list">
+                <tr class="empty-row"><td colspan="5"><div class="empty-state"><div class="empty-icon">⌁</div><strong>No monitors yet</strong><span>Add a website to start tracking its availability.</span><button class="text-button" id="empty-add-button">Add your first monitor →</button></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel-footer"><span id="watchlist-note">Your watchlist is saved in this browser until the monitoring API is connected.</span><span class="footer-live"><i></i> LIVE CHECKS WHEN CONNECTED</span></div>
+        </div>
+      </section>
+
+      <section class="content-section popular-section">
+        <div class="section-heading compact-heading">
+          <div><div class="eyebrow">QUICK ACCESS</div><h2>Popular websites</h2><p>Run a quick availability check on a commonly used service.</p></div>
+        </div>
+        <div class="popular-grid" id="popular-grid"></div>
+      </section>
+
+      <section class="content-section how-section" id="how-it-works">
+        <div class="how-card">
+          <div class="how-intro"><div class="eyebrow">SIMPLE. CLEAR. USEFUL.</div><h2>Know what's working.</h2><p>StatusWatch sends a request to a website from its monitoring server and measures whether it responds.</p></div>
+          <div class="how-steps">
+            <div class="how-step"><span>01</span><div><strong>Enter a URL</strong><p>Paste the public website you want to check.</p></div></div>
+            <div class="how-step"><span>02</span><div><strong>Check the response</strong><p>See availability, HTTP status, and response time.</p></div></div>
+            <div class="how-step"><span>03</span><div><strong>Monitor over time</strong><p>Connect the scheduled Worker to keep a history and check saved monitors automatically.</p></div></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a class="brand footer-brand" href="#"><span class="brand-mark"><svg viewBox="0 0 24 24"><path d="M3 12h4l2.2-6 4.1 12 2.1-6H21"/></svg></span><span>Status<span class="brand-light">Watch</span></span></a>
+      <span>Independent website availability checks.</span>
+      <span>© <span id="year"></span> StatusWatch</span>
+    </footer>
+  </div>
+
+  <dialog id="monitor-dialog" class="modal">
+    <form method="dialog" id="monitor-form">
+      <div class="modal-head"><div><div class="eyebrow">ADD TO YOUR WATCHLIST</div><h3>New monitor</h3></div><button class="close-button" value="cancel" aria-label="Close">×</button></div>
+      <label for="monitor-url">Website URL</label><input id="monitor-url" type="text" placeholder="https://example.com" required>
+      <label for="monitor-name">Display name <span class="optional">(optional)</span></label><input id="monitor-name" type="text" placeholder="My website">
+      <p class="modal-note">When the API is connected, this website can be checked automatically every five minutes.</p>
+      <div class="modal-actions"><button class="secondary-button" value="cancel">Cancel</button><button class="primary-button" id="save-monitor" value="default">Save monitor <span>↗</span></button></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

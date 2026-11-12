@@ -1,0 +1,23 @@
+
+name = "statuswatch-api"
+main = "index.js"
+compatibility_date = "2026-11-12"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[kv_namespaces]]
+binding = "MONITORS"
+id = "4b6d1fd4a11e4f4f8efc22f5e13587e9"
+
+[vars]
+ALLOWED_ORIGIN = "https://matjorr.github.io"
+
+
+[[ratelimits]]
+name = "CHECK_LIMITER"
+namespace_id = "20261112"
+
+[ratelimits.simple]
+limit = 20
+period = 60

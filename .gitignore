@@ -1,0 +1,16 @@
+﻿# Wrangler generated files
+.wrangler/
+worker/.wrangler/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# Dependencies
+node_modules/
+
+# Operating system files
+.DS_Store
+Thumbs.db
